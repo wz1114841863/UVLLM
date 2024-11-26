@@ -14,7 +14,7 @@ from rtlrepair.utils import ensure_block
 from rtlrepair.visitor import AstVisitor
 import pyverilog.vparser.ast as vast
 
-import claude_api
+import api
 
 def _same_warnings(old: list, new: list) -> bool:
     return {_warning_sig(w) for w in old} == {_warning_sig(w) for w in new}
@@ -97,7 +97,7 @@ def preprocess(working_dir: Path, verilog_path: Path, include: Path, logger):
         logger.info(warnings)
         logger.info(errors)
         if errors:
-            new_code, fix = claude_api.api_syntax(filename, errors, None, logger)
+            new_code, fix = api.api_syntax(filename, errors, None, logger)
             logger.info(fix)
             if fix:
                 fixed_filename = preprocess_dir / f"{filename.stem}.{ii}.v"
@@ -110,7 +110,7 @@ def preprocess(working_dir: Path, verilog_path: Path, include: Path, logger):
                 break
         elif warnings:
             if "IMPLICIT" in warnings[0].tpe:
-                new_code, fix = claude_api.api_syntax(filename, warnings[0].msg, None, logger)
+                new_code, fix = api.api_syntax(filename, warnings[0].msg, None, logger)
                 logger.info(fix)
                 if fix:
                     fixed_filename = preprocess_dir / f"{filename.stem}.{ii}.v"
