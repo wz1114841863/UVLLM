@@ -8,7 +8,7 @@ from Benchmark import BenchmarkFactory
 
 from rtlrepair import parse_verilog, serialize,  preprocess,  Status
 
-import claude_api
+import api
 
 import difflib
 def string_similar(s1, s2):
@@ -55,14 +55,14 @@ def test_mismatch(logger, benchmark, bugInfo, working_dir, max_i):
 
                     try:
                         logger.info(filename.as_posix())
-                        newcode, fix = claude_api.api_gpt_mismatch(bugInfo["spec_file"],str(filename.as_posix()), str(mismatchsignals), None, logger)
+                        newcode, fix = api.api_gpt_mismatch(bugInfo["spec_file"],str(filename.as_posix()), str(mismatchsignals), None, logger)
                         
                         with open(Path("".join(bugInfo["src_file"])), 'w') as codepath:
                             codepath.write(newcode)
                         break
                     except Exception as e:
                         try_api+=1
-                        logger.error("Error in claude_api.api_gpt, retrying...")
+                        logger.error("Error in api.api_gpt, retrying...")
                         logger.error(str(e))
                     
 
@@ -84,7 +84,7 @@ def test_mismatch(logger, benchmark, bugInfo, working_dir, max_i):
             logger.error(str(e))
             if(i==0):
                 logger.info("Cannot simulation.")
-                newcode, fix = claude_api.api_syntax(str(filename.as_posix()), str(e), None, logger) #prevent the syntax error                       
+                newcode, fix = api.api_syntax(str(filename.as_posix()), str(e), None, logger) #prevent the syntax error                       
                 with open(Path("".join(bugInfo["src_file"])), 'w') as codepath:
                     codepath.write(newcode)
                 gpt_try=1
@@ -142,7 +142,7 @@ def test_suspiciousline(logger, benchmark, bugInfo, working_dir, history, max_i)
                 while try_api<max_try:
 
                     try:
-                        newcode, fix = claude_api.api_gpt_suspicious(bugInfo["spec_file"],str(filename.as_posix()), str(suspiciousCodeLines), badfix, logger)           
+                        newcode, fix = api.api_gpt_suspicious(bugInfo["spec_file"],str(filename.as_posix()), str(suspiciousCodeLines), badfix, logger)           
 
                         logger.info("score: {}".format(score))
                         logger.info(badfix)
@@ -151,7 +151,7 @@ def test_suspiciousline(logger, benchmark, bugInfo, working_dir, history, max_i)
                         break
                     except Exception as e:
                         try_api+=1
-                        logger.error("Error in claude_api.api_gpt, retrying...")
+                        logger.error("Error in api.api_gpt, retrying...")
                         logger.error(str(e))     
 
                 history.append({
