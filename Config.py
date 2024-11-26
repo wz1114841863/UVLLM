@@ -9,4 +9,4 @@ BENCHMARKS = os.path.join(PROJECT_PATH, "benchmarks")
 WORK_DIR = os.path.join(PROJECT_PATH, "workdir")
 PATCH_DIR = os.path.join(PROJECT_PATH, "patch")
 
-LOG_PATH = os.path.join(PROJECT_PATH, "logs/strider.log")
+LOG_PATH = os.path.join(PROJECT_PATH, "logs/UVLLM.log")
