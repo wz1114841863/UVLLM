@@ -12,7 +12,7 @@ from openai import OpenAI
 import logging
 
 os.environ["OPENAI_API_BASE"] = "https://api.openai.com/v1"
-os.environ["OPENAI_API_KEY"] = "api"
+os.environ["OPENAI_API_KEY"] = "your_api_key_here"
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),
                 base_url=os.environ.get("OPENAI_API_BASE"))
