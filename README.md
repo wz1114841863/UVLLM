@@ -38,5 +38,5 @@ Example: python UVLLM/Main.py -b ErrorSet -p accu -v 1
 For the total benchmark test, use:
 
 ```
-Example: python ./Main.py -b ErrorSet
+Example: python UVLLM/Main.py -b ErrorSet
 ```
