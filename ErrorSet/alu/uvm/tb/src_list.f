@@ -1,0 +1,14 @@
++incdir+$UVM_HOME/src
+$UVM_HOME/src/uvm_pkg.sv
+../tb/alu_if.sv
+../tb/tb_sequence_item.sv
+../tb/tb_sequence.sv
+../tb/tb_sequencer.sv
+../tb/tb_driver.sv
+../tb/tb_monitor.sv
+../tb/tb_agent.sv
+../tb/tb_scoreboard.sv
+../tb/tb_env.sv
+../tb/tb_test.sv
+../rtl/alu.v
+../tb/tb_top.sv
