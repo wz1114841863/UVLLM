@@ -32,7 +32,7 @@ Our prototype needs three input options for execution:
 * `--version/-v`: the error index for the DUT. (1 for the example)
 
 ```
-Example: python ./Main.py -b ErrorSet -p accu -v 1
+Example: python UVLLM/Main.py -b ErrorSet -p accu -v 1
 ```
 
 For the total benchmark test, use:
