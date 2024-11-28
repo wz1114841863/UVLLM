@@ -1,0 +1,14 @@
++incdir+$UVM_HOME/src
+$UVM_HOME/src/uvm_pkg.sv
+../tb/accu_if.sv
+../tb/accu_transaction.sv
+../tb/accu_sequence.sv
+../tb/accu_sequencer.sv
+../tb/accu_driver.sv
+../tb/accu_monitor.sv
+../tb/accu_agent.sv
+../tb/accu_scoreboard.sv
+../tb/accu_env.sv
+../tb/accu_test.sv
+../rtl/accu.v
+../tb/tb_top.sv
