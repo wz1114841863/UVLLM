@@ -1,0 +1,14 @@
++incdir+$UVM_HOME/src
+$UVM_HOME/src/uvm_pkg.sv
+../tb/radix2_div_if.sv
+../tb/radix2_div_transaction.sv
+../tb/radix2_div_sequence.sv
+../tb/radix2_div_sequencer.sv
+../tb/radix2_div_driver.sv
+../tb/radix2_div_monitor.sv
+../tb/radix2_div_agent.sv
+../tb/radix2_div_scb.sv
+../tb/radix2_div_env.sv
+../tb/radix2_div_test.sv
+../rtl/radix2_div.v
+../tb/tb_top.sv
