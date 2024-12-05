@@ -4,8 +4,8 @@
 test_name="radix2_div_test"    # uvm_test class
 top_mod="tb_top"          # top module name
 
-export UVM_HOME=/Business/EDA_wx_company/pandingrong/uvm/uvm-1800.2-2020.3.1
-export VCS_HOME=/Business/EDA_wx_company/public/tools/vcs_R-2020.12-SP2
+export UVM_HOME=/YOUR/PATH/TO/UVM
+export VCS_HOME=/YOUR/PATH/TO/VCS
 
 
 vlogan -full64 -sverilog -f ../tb/src_list.f -ntb_opts uvm +incdir+$UVM_HOME/src 
