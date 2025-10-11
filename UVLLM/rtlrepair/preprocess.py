@@ -8,13 +8,14 @@ from dataclasses import dataclass
 from pathlib import Path
 import subprocess
 
-#from benchmarks import Benchmark, get_other_sources
+# from benchmarks import Benchmark, get_other_sources
 from rtlrepair import parse_verilog, serialize
 from rtlrepair.utils import ensure_block
 from rtlrepair.visitor import AstVisitor
 import pyverilog.vparser.ast as vast
 
 import api
+
 
 def _same_warnings(old: list, new: list) -> bool:
     return {_warning_sig(w) for w in old} == {_warning_sig(w) for w in new}
@@ -28,15 +29,35 @@ def _check_for_verilator():
 # while WIDTH warnings can be indicative of a bug, they are generally too noisy to deal with easily
 # CASEOVERLAP might be an interesting warning to deal with
 # PINCONNECTEMPTY better be optimized
-_ignore_warnings = {"DECLFILENAME", "ASSIGNDLY", "UNUSED", "EOFNEWLINE", "WIDTH", "CASEOVERLAP", "STMTDLY",
-                    "TIMESCALEMOD", "MULTIDRIVEN", "UNDRIVEN", "LITENDIAN", 
-                    "PINCONNECTEMPTY", "PINMISSING", "UNOPTFLAT", "SYNCASYNCNET", "SELRANGE", "UNSIGNED", "CMPCONST"}
+_ignore_warnings = {
+    "DECLFILENAME",
+    "ASSIGNDLY",
+    "UNUSED",
+    "EOFNEWLINE",
+    "WIDTH",
+    "CASEOVERLAP",
+    "STMTDLY",
+    "TIMESCALEMOD",
+    "MULTIDRIVEN",
+    "UNDRIVEN",
+    "LITENDIAN",
+    "PINCONNECTEMPTY",
+    "PINMISSING",
+    "UNOPTFLAT",
+    "SYNCASYNCNET",
+    "SELRANGE",
+    "UNSIGNED",
+    "CMPCONST",
+}
 _ignore_errors = "Unsupported tristate construct"
-_verilator_lint_flags = ["--lint-only", "-Wno-fatal", "-Wall"] + [f"-Wno-{w}" for w in _ignore_warnings]
+_verilator_lint_flags = ["--lint-only", "-Wno-fatal", "-Wall"] + [
+    f"-Wno-{w}" for w in _ignore_warnings
+]
 _verilator_warn = re.compile(r"%Warning-([A-Z]+): ([^:]+):(\d+):(\d+):([^\n]+)")
 
 _verilator_err = re.compile(r"%Error: (\S+):(\d+):\d+: (.+)")
 _verilator_err2 = re.compile(r"%Error-([A-Z]+): ([^:]+):(\d+):(\d+):([^\n]+)")
+
 
 def remove_blank_lines(lines: list) -> list:
     return [ll.strip() for ll in lines if len(ll.strip()) > 0]
@@ -54,22 +75,30 @@ class LintWarning:
 def _warning_sig(warn: LintWarning) -> str:
     return f"{warn.tpe}@{warn.line}"
 
+
 def parse_linter_output(lines: list) -> list:
     out = []
     for line in lines:
         m = _verilator_warn.search(line)
         if m is not None:
             (tpe, filename, line, col, msg) = m.groups()
-            out.append(LintWarning(tpe, Path(filename), int(line), int(col), msg.strip()))
+            out.append(
+                LintWarning(tpe, Path(filename), int(line), int(col), msg.strip())
+            )
         elif len(out) > 0:
             out[0].msg += "\n" + line
     return out
 
+
 def run_linter(iteration: int, filename: Path, preprocess_dir: Path, include: Path):
     _check_for_verilator()
-    cmd = ["verilator"] + _verilator_lint_flags + [f"-I{include.resolve()}" if include else "", str(filename.resolve())]
+    cmd = (
+        ["verilator"]
+        + _verilator_lint_flags
+        + [f"-I{include.resolve()}" if include else "", str(filename.resolve())]
+    )
     r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    info = (r.stdout + r.stderr).decode('utf-8').splitlines()
+    info = (r.stdout + r.stderr).decode("utf-8").splitlines()
     info = remove_blank_lines(info)
     if len(info) == 0:
         return [], []
@@ -77,12 +106,22 @@ def run_linter(iteration: int, filename: Path, preprocess_dir: Path, include: Pa
     with open(preprocess_dir / f"{iteration}_linter.txt", "w") as f:
         f.write("\n".join(info) + "\n")
 
-    errors = [line for line in info if (re.match(_verilator_err, line) or re.match(_verilator_err2, line) and _ignore_errors not in line)]
+    errors = [
+        line
+        for line in info
+        if (
+            re.match(_verilator_err, line)
+            or re.match(_verilator_err2, line)
+            and _ignore_errors not in line
+        )
+    ]
     warnings = parse_linter_output(info)
     return warnings, errors
 
+
 def preprocess(working_dir: Path, verilog_path: Path, include: Path, logger):
     assert working_dir.exists()
+    # print(f"Working dir: {working_dir}, Exists: {working_dir.exists()}")
     preprocess_dir = working_dir / "0_preprocess"
     if preprocess_dir.exists():
         shutil.rmtree(preprocess_dir)
@@ -123,10 +162,10 @@ def preprocess(working_dir: Path, verilog_path: Path, include: Path, logger):
                 else:
                     break
 
-            elif change_count > 0: 
-            # check to see if warnings actually changed or if we are at a fixed point
+            elif change_count > 0:
+                # check to see if warnings actually changed or if we are at a fixed point
                 if _same_warnings(previous_warnings, warnings):
-                        break
+                    break
             else:
                 fixed_filename = preprocess_dir / f"{filename.stem}.{ii}.v"
                 ast = parse_verilog(filename, None)
@@ -140,6 +179,7 @@ def preprocess(working_dir: Path, verilog_path: Path, include: Path, logger):
             break
 
     return filename, change_count
+
 
 _fix_warnings = {"CASEINCOMPLETE", "BLKSEQ", "LATCH", "COMBDLY"}
 
@@ -159,20 +199,23 @@ _latch_re = re.compile(r"Latch inferred for signal '([^']+)'")
 # TODO: maybe change back to 0
 _default_value = "'d0"
 
+
 def assign_latch_signal(latch_warning: LintWarning):
     m = _latch_re.search(latch_warning.msg)
     assert m is not None, latch_warning.msg
     signal_parts = m.group(1).split(".")
     ident = vast.Identifier(signal_parts[-1].strip())
-    return vast.BlockingSubstitution(vast.Lvalue(ident), vast.Rvalue(vast.IntConst(_default_value)))
+    return vast.BlockingSubstitution(
+        vast.Lvalue(ident), vast.Rvalue(vast.IntConst(_default_value))
+    )
 
 
 class LintFixer(AstVisitor):
-    """ This class addressed the following lint warning:
-        - CASEINCOMPLETE: Case values incompletely covered (example pattern 0x5)
-        - LATCH
-        - BLKSEQ: Blocking assignment '=' in sequential logic process
-        - COMBDLY: Non-blocking assignment \'<=\' in combinational logic process
+    """This class addressed the following lint warning:
+    - CASEINCOMPLETE: Case values incompletely covered (example pattern 0x5)
+    - LATCH
+    - BLKSEQ: Blocking assignment '=' in sequential logic process
+    - COMBDLY: Non-blocking assignment \'<=\' in combinational logic process
     """
 
     def __init__(self, warnings: list):
@@ -218,7 +261,9 @@ class LintFixer(AstVisitor):
         node = self.generic_visit(node)
         # change to non-blocking if we got a blocking assignment in sequential logic process
         if len(self._find_warnings("BLKSEQ", node.lineno)) > 0:
-            node = vast.NonblockingSubstitution(node.left, node.right, node.ldelay, node.rdelay, node.lineno)
+            node = vast.NonblockingSubstitution(
+                node.left, node.right, node.ldelay, node.rdelay, node.lineno
+            )
             self.change_count += 1
         return node
 
@@ -226,7 +271,8 @@ class LintFixer(AstVisitor):
         node = self.generic_visit(node)
         # change to blocking if we got a non-blocking assignment in combinatorial logic process
         if len(self._find_warnings("COMBDLY", node.lineno)) > 0:
-            node = vast.BlockingSubstitution(node.left, node.right, node.ldelay, node.rdelay, node.lineno)
+            node = vast.BlockingSubstitution(
+                node.left, node.right, node.ldelay, node.rdelay, node.lineno
+            )
             self.change_count += 1
         return node
-    

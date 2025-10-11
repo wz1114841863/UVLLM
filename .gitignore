@@ -1,0 +1,16 @@
+# tmp
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# API keys
+APIKey.py
+
+# env
+.venv/
+env/
+venv/
+
+# folder
+.vscode/
