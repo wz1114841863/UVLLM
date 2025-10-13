@@ -1,9 +1,13 @@
 import logging
 
-def initLogger(path, cmdLevel = logging.DEBUG, fileLevel = logging.DEBUG):
+
+def initLogger(path, cmdLevel=logging.DEBUG, fileLevel=logging.DEBUG):
     logger = logging.getLogger(path)
     logger.setLevel(logging.DEBUG)
-    fmt = logging.Formatter('[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    fmt = logging.Formatter(
+        "[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     # cmd log
     sh = logging.StreamHandler()
     sh.setFormatter(fmt)

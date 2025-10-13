@@ -1,5 +1,5 @@
-
 def processSignal(signalList):
+    """处理信号列表, 返回信号字典."""
     signalRecords = {}
 
     # processing headers
@@ -16,13 +16,13 @@ def processSignal(signalList):
                 signalRecords[h].append(tSignals[i])
             else:
                 signalRecords[h] = [tSignals[i]]
-    
+
     # aggregate signals
     uniqHeaders = set()
     uniqMaps = {}
     for h in headers:
         if "[" in h:
-            uh = h[:h.index("[")]
+            uh = h[: h.index("[")]
             uniqHeaders.add(uh)
             if uh in uniqMaps:
                 uniqMaps[uh].append(h)
@@ -30,10 +30,11 @@ def processSignal(signalList):
                 uniqMaps[uh] = [h]
         else:
             uniqHeaders.add(h)
-    
+
     # sort signal list
     def takeIndex(elem):
-        return int(elem[elem.index("[")+1:-1])
+        return int(elem[elem.index("[") + 1 : -1])
+
     for k, v in uniqMaps.items():
         v.sort(key=takeIndex, reverse=True)
     uniqSignalRecords = {}
@@ -50,7 +51,9 @@ def processSignal(signalList):
             uniqSignalRecords[uh] = signalRecords[uh]
     return uniqSignalRecords
 
+
 def getMismatchSignal(oracleOutput, simOutput):
+    """对比两个信号字典, 返回第一个时间戳不匹配的信号列表."""
     headers = list(oracleOutput.keys())
     sampleNum = len(oracleOutput[headers[0]])
     for i in range(sampleNum):
@@ -70,34 +73,48 @@ def getMismatchSignal(oracleOutput, simOutput):
             return (t, mismatches)
     return (None, None)
 
+
 def processOutputFile(oracleOutputPath, simOutputPath):
+    """处理仿真输出的信号文件, 返回信号字典."""
     oracleOutputList = open(oracleOutputPath, "r").readlines()
     simOutputList = open(simOutputPath, "r").readlines()
     oracleSignal = processSignal(oracleOutputList)
     simSignal = processSignal(simOutputList)
     return oracleSignal, simSignal
 
+
 def equal(signalA, signalB):
+    """比较两个信号是否相等,如果包含 x 或 z 则保持字符串形式"""
     valueA, valueB = signalA, signalB
-    if isinstance(signalA, str) and "'b" in signalA and ("x" not in signalA and "z" not in signalA):
-        valueA = int(signalA[signalA.index("'b")+2:], 2)
-    if isinstance(signalB, str) and "'b" in signalB and ("x" not in signalB and "z" not in signalB):
-        valueB = int(signalB[signalB.index("'b")+2:], 2)
+    if (
+        isinstance(signalA, str)
+        and "'b" in signalA
+        and ("x" not in signalA and "z" not in signalA)
+    ):
+        valueA = int(signalA[signalA.index("'b") + 2 :], 2)
+    if (
+        isinstance(signalB, str)
+        and "'b" in signalB
+        and ("x" not in signalB and "z" not in signalB)
+    ):
+        valueB = int(signalB[signalB.index("'b") + 2 :], 2)
     return str(valueA) == str(valueB)
 
+
 def converse(signal):
+    """将信号转换为整数或浮点数,如果包含 x 或 z 则保持字符串形式"""
     if isinstance(signal, str):
         signal = signal.lower()
         if "x" in signal or "z" in signal:
             return signal
         elif "'b" in signal:
-            return int(signal[signal.index("'b")+2:], 2)
+            return int(signal[signal.index("'b") + 2 :], 2)
         elif "'o" in signal:
-            return int(signal[signal.index("'o")+2:], 8)
+            return int(signal[signal.index("'o") + 2 :], 8)
         elif "'d" in signal:
-            return int(signal[signal.index("'d")+2:], 10)
+            return int(signal[signal.index("'d") + 2 :], 10)
         elif "'h" in signal:
-            return int(signal[signal.index("'h")+2:], 16)
+            return int(signal[signal.index("'h") + 2 :], 16)
     elif isinstance(signal, float):
         return signal
     return int(signal)

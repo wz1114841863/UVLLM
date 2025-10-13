@@ -1,4 +1,7 @@
-import os, re, abc, json
+import os
+import re
+import abc
+import json
 import configparser
 import Config
 from utils import VcdUtils, FileUtils, StringUtils

@@ -1,17 +1,30 @@
-import re, io, logging
+import re
+import io
+import logging
+
 from vcd.reader import TokenKind, tokenize, ScopeDecl
 
 logger = logging.getLogger()
 
+
 def computeUnitLevel(tsUnit, tsPrecision):
+    """计算时间单位换算成纳秒的倍数."""
     tsUnitMatch = re.match("(\d+)(\w+)", tsUnit)
     tsPrecisionMatch = re.match("(\d+)(\w+)", tsPrecision)
     tsu1, tsu2 = int(tsUnitMatch[1]), tsUnitMatch[2]
     tsp1, tsp2 = int(tsPrecisionMatch[1]), tsPrecisionMatch[2]
-    UnifiedUnitToNanoSecond = {"s":1000000, "ms": 1000, "ns": 1, "ps": 0.001, "fs": 0.000001}
+    UnifiedUnitToNanoSecond = {
+        "s": 1000000,
+        "ms": 1000,
+        "ns": 1,
+        "ps": 0.001,
+        "fs": 0.000001,
+    }
     return tsp1 * UnifiedUnitToNanoSecond[tsp2] / (tsu1 * UnifiedUnitToNanoSecond[tsu2])
 
+
 def parse(vcdFile, timeScale):
+    """解析 VCD 文件, 返回信号变化字典和信号属性字典."""
     scopes = []
     varsDict = {}
     varsChangeDict = {}
@@ -21,7 +34,7 @@ def parse(vcdFile, timeScale):
 
     with open(vcdFile, "r") as f:
         for vcdLine in f:
-            vcdBytes = vcdLine.encode('utf-8')
+            vcdBytes = vcdLine.encode("utf-8")
             tokens = tokenize(io.BytesIO(vcdBytes))
             # tlist = [i for i in tokens]
 
@@ -30,28 +43,55 @@ def parse(vcdFile, timeScale):
                     scope = token.data.ident
                     scopes.append(scope)
                 if token.kind == TokenKind.VAR:
-                    if len(scopes) <= 1: continue # exclude the signals in testbench
+                    if len(scopes) <= 1:
+                        continue  # exclude the signals in testbench
                     if token.data.id_code not in varsDict:
                         varsDict[token.data.id_code] = []
-                    varsDict[token.data.id_code].append("{}.{}".format(".".join(scopes[1:]), token.data.reference))
-                    attributesDict["{}.{}".format(".".join(scopes[1:]), token.data.reference)] = {"size":token.data.size, "bit_index":token.data.bit_index}
-                    varsChangeDict["{}.{}".format(".".join(scopes[1:]), token.data.reference)] = []
+                    varsDict[token.data.id_code].append(
+                        "{}.{}".format(".".join(scopes[1:]), token.data.reference)
+                    )
+                    attributesDict[
+                        "{}.{}".format(".".join(scopes[1:]), token.data.reference)
+                    ] = {"size": token.data.size, "bit_index": token.data.bit_index}
+                    varsChangeDict[
+                        "{}.{}".format(".".join(scopes[1:]), token.data.reference)
+                    ] = []
                 if token.kind == TokenKind.UPSCOPE:
                     scopes.pop(-1)
                 if token.kind == TokenKind.CHANGE_TIME:
                     timeStamp = token.data
-                if token.kind == TokenKind.CHANGE_SCALAR or token.kind == TokenKind.CHANGE_VECTOR:
-                    if token.data.id_code not in varsDict: continue
+                if (
+                    token.kind == TokenKind.CHANGE_SCALAR
+                    or token.kind == TokenKind.CHANGE_VECTOR
+                ):
+                    if token.data.id_code not in varsDict:
+                        continue
                     for signal in varsDict[token.data.id_code]:
                         dataValue = token.data.value
                         if isinstance(token.data.value, int):
                             dataValue = bin(token.data.value)[2:]
                         if attributesDict[signal]["size"] != len(dataValue):
-                            if dataValue == 'x' or dataValue == 'z':
-                                varsChangeDict[signal].append((timeStamp * unitLevel, "'b" + attributesDict[signal]["size"] * dataValue))
+                            if dataValue == "x" or dataValue == "z":
+                                varsChangeDict[signal].append(
+                                    (
+                                        timeStamp * unitLevel,
+                                        "'b"
+                                        + attributesDict[signal]["size"] * dataValue,
+                                    )
+                                )
                             else:
-                                varsChangeDict[signal].append((timeStamp * unitLevel, "'b" + dataValue.zfill(attributesDict[signal]["size"])))
+                                varsChangeDict[signal].append(
+                                    (
+                                        timeStamp * unitLevel,
+                                        "'b"
+                                        + dataValue.zfill(
+                                            attributesDict[signal]["size"]
+                                        ),
+                                    )
+                                )
                         else:
-                            varsChangeDict[signal].append((timeStamp * unitLevel, "'b" + dataValue))
-    
+                            varsChangeDict[signal].append(
+                                (timeStamp * unitLevel, "'b" + dataValue)
+                            )
+
     return varsChangeDict, attributesDict
