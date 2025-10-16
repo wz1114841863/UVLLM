@@ -1,7 +1,14 @@
-import json, os, re
+import json
+import os
+import re
+import openai
+import logging
+from openai import OpenAI
+
 from utils import Logger
 from utils.APIKey import *
 
+# 返回模板
 jsonform = {
     "module name": "",
     "analysis": "",
@@ -11,16 +18,15 @@ jsonform = {
     ],
 }
 
-import openai
-from openai import OpenAI
-import logging
 
 client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"), base_url=os.environ.get("OPENAI_API_BASE")
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    base_url=os.environ.get("OPENAI_API_BASE"),
 )
 
 
 def get_completion(prompt, model=MODEL_NAME, temperature=0.9):
+    """统一LLM调用封装"""
     res = ""
     try:
         response = client.chat.completions.create(
@@ -67,7 +73,7 @@ def api_gpt_mismatch(spec, file_path, snip, badfix: None, logger):
 
     response = get_completion(prompt, "deepseek-chat", 0.9)
     logger.info(response[0])
-    data = eval(response[0])
+    data = eval(response[0])  # 解析json, 如果返回格式不符合格式, eval失败, 抛出异常
 
     newsrc = content
     for everyOne in data["correct code"]:
@@ -135,6 +141,7 @@ def api_syntax(file_path, snip, badfix: None, logger):
 
 
 def replace_with_regex(original, replacement, text):
+    """代码替换"""
     if original == None:
         return text
     pattern = re.escape(original)
